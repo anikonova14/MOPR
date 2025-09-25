@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мельбурнский Опросник Принятия Решений (МОПР)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 500;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #2c3e50;
+        }
+
+        .intro {
+            font-size: 16px;
+            margin-bottom: 40px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .question {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #fafafa;
+            border-radius: 8px;
+        }
+
+        .question-text {
+            font-size: 16px;
+            margin-bottom: 15px;
+            font-weight: 400;
+        }
+
+        .answer-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .answer-btn {
+            padding: 10px 25px;
+            border: 2px solid #e0e0e0;
+            background-color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            color: #555;
+        }
+
+        .answer-btn:hover {
+            background-color: #f0f0f0;
+            border-color: #ccc;
+        }
+
+        .answer-btn.selected {
+            background-color: #2c3e50;
+            color: white;
+            border-color: #2c3e50;
+        }
+
+        .submit-btn {
+            display: block;
+            margin: 40px auto 0;
+            padding: 15px 40px;
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 16px;
+            font-family: 'Montserrat', sans-serif;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            background-color: #34495e;
+        }
+
+        .results {
+            display: none;
+            margin-top: 40px;
+            padding: 30px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .result-item {
+            margin-bottom: 20px;
+        }
+
+        .result-label {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .result-bar {
+            background-color: #e0e0e0;
+            height: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .result-fill {
+            background-color: #2c3e50;
+            height: 100%;
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            padding-left: 10px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .interpretation {
+            margin-top: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .pdf-section {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background-color: white;
+            border-radius: 8px;
+            border: 2px dashed #2c3e50;
+        }
+
+        .name-input {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .name-input input {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 14px;
+            min-width: 150px;
+        }
+
+        .name-input input:focus {
+            outline: none;
+            border-color: #2c3e50;
+        }
+
+        .download-btn {
+            display: block;
+            margin: 0 auto;
+            padding: 12px 30px;
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            font-family: 'Montserrat', sans-serif;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background-color: #219a52;
+        }
+
+        .download-btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        /* Стили для PDF */
+        .pdf-container {
+            position: absolute;
+            left: -9999px;
+            top: -9999px;
+            background-color: white;
+            padding: 40px;
+            width: 800px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .pdf-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .pdf-title {
+            font-size: 24px;
+            font-weight: 500;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .pdf-name {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .pdf-date {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .pdf-results {
+            padding: 30px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .pdf-results-title {
+            font-size: 20px;
+            font-weight: 500;
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Мельбурнский Опросник Принятия Решений (МОПР)</h1>
+        
+        <div class="intro">
+            Люди отличаются по тому, как они принимают решения. Пожалуйста, укажите, как именно Вы принимаете решения - для каждого вопроса выберите ответ, наиболее соответствующий Вашему обычному стилю принятия решений.
+        </div>
+
+        <form id="questionnaire">
+            <!-- Вопросы будут добавлены через JavaScript -->
+        </form>
+
+        <button class="submit-btn" onclick="calculateResults()">Получить результаты</button>
+
+        <div class="results" id="results">
+            <h2 style="text-align: center; margin-bottom: 30px;">Ваши результаты</h2>
+            <div id="resultsContent"></div>
+            
+            <div class="pdf-section" id="pdfSection">
+                <h3 style="text-align: center; margin-bottom: 20px; color: #2c3e50;">Скачать результаты в PDF</h3>
+                <div class="name-input">
+                    <input type="text" id="firstName" placeholder="Имя" />
+                    <input type="text" id="lastName" placeholder="Фамилия" />
+                </div>
+                <button class="download-btn" onclick="downloadPDF()" id="downloadBtn" disabled>
+                    Скачать PDF с результатами
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Скрытый контейнер для PDF -->
+    <div id="pdfContainer" class="pdf-container"></div>
+
+    <script>
+        const questions = [
+            "Когда я принимаю решение, у меня возникает ощущение безумной нехватки времени",
+            "Я предпочитаю рассматривать все альтернативы",
+            "Я предпочитаю оставлять принятие решений другим людям",
+            "Я пытаюсь найти недостатки у всех альтернатив",
+            "Я трачу много времени на мелкие дела, прежде чем приступаю к принятию основного решения",
+            "Я продумываю лучший способ исполнения решения",
+            "Даже после принятия решения я откладываю на потом его исполнение",
+            "При принятии решений я предпочитаю собирать большое количество информации",
+            "Я избегаю принимать решения",
+            "Когда мне нужно принять решение, я жду долгое время перед тем, как начать о нем думать",
+            "Мне не нравится брать на себя ответственность за принятие решений",
+            "Я стараюсь иметь четкое представление о своих целях перед тем как сделать выбор",
+            "Возможность того, что какая-то мелочь пойдет «не по плану» вынуждает меня резко изменить решение",
+            "Если решение может быть принято мной или другим человеком, я дам другому человеку это сделать",
+            "Когда я сталкиваюсь с трудной проблемой, я обычно пессимистичен относительно возможности найти хорошее решение",
+            "Я тщательно все обдумываю перед тем, как сделать выбор",
+            "Я не принимаю решения пока в этом нет острой необходимости",
+            "Я отсрочиваю принятие решений до последнего момента",
+            "Я предпочитаю, чтобы решения принимались теми, кто в большей степени информирован, чем я",
+            "После того, как я принял решение, я трачу много времени, убеждая себя, что оно было правильным",
+            "Я откладываю принятие решений",
+            "Я не могу мыслить трезво, если мне нужно принять решение в спешке"
+        ];
+
+        const categories = {
+            "Бдительность": [2, 4, 6, 8, 12, 16],
+            "Избегание": [3, 9, 11, 14, 17, 19],
+            "Прокрастинация": [5, 7, 10, 18, 21],
+            "Сверхбдительность": [1, 13, 15, 20, 22]
+        };
+
+        let currentResults = {};
+
+        // Создание вопросов
+        const form = document.getElementById('questionnaire');
+        questions.forEach((question, index) => {
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'question';
+            questionDiv.innerHTML = `
+                <div class="question-text">${index + 1}. ${question}</div>
+                <div class="answer-buttons">
+                    <button type="button" class="answer-btn" onclick="selectAnswer(${index}, 1, this)">Неверно</button>
+                    <button type="button" class="answer-btn" onclick="selectAnswer(${index}, 2, this)">Иногда верно</button>
+                    <button type="button" class="answer-btn" onclick="selectAnswer(${index}, 3, this)">Верно</button>
+                </div>
+            `;
+            form.appendChild(questionDiv);
+        });
+
+        const answers = {};
+
+        function selectAnswer(questionIndex, value, button) {
+            answers[questionIndex] = value;
+            
+            // Убираем выделение с других кнопок
+            const buttons = button.parentElement.querySelectorAll('.answer-btn');
+            buttons.forEach(btn => btn.classList.remove('selected'));
+            
+            // Выделяем выбранную кнопку
+            button.classList.add('selected');
+        }
+
+        function calculateResults() {
+            if (Object.keys(answers).length < questions.length) {
+                alert('Пожалуйста, ответьте на все вопросы');
+                return;
+            }
+
+            const results = {};
+            
+            for (const [category, questionNumbers] of Object.entries(categories)) {
+                let sum = 0;
+                questionNumbers.forEach(num => {
+                    sum += answers[num - 1] || 0;
+                });
+                const maxScore = questionNumbers.length * 3;
+                const percentage = Math.round((sum / maxScore) * 100);
+                results[category] = percentage;
+            }
+
+            currentResults = results;
+            displayResults(results);
+        }
+
+        function getInterpretation(percentage) {
+            if (percentage <= 20) return "низкий показатель";
+            if (percentage <= 40) return "пониженный показатель";
+            if (percentage <= 60) return "средний показатель";
+            if (percentage <= 80) return "повышенный показатель";
+            return "высокий показатель";
+        }
+
+        function displayResults(results) {
+            const resultsContent = document.getElementById('resultsContent');
+            resultsContent.innerHTML = '';
+
+            for (const [category, percentage] of Object.entries(results)) {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'result-item';
+                resultItem.innerHTML = `
+                    <div class="result-label">${category}</div>
+                    <div class="result-bar">
+                        <div class="result-fill" style="width: ${percentage}%">${percentage}%</div>
+                    </div>
+                    <div class="interpretation">${getInterpretation(percentage)}</div>
+                `;
+                resultsContent.appendChild(resultItem);
+            }
+
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('pdfSection').style.display = 'block';
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+            
+            // Включаем/выключаем кнопку скачивания при изменении полей
+            const firstNameInput = document.getElementById('firstName');
+            const lastNameInput = document.getElementById('lastName');
+            const downloadBtn = document.getElementById('downloadBtn');
+            
+            function checkInputs() {
+                if (firstNameInput.value.trim() && lastNameInput.value.trim()) {
+                    downloadBtn.disabled = false;
+                } else {
+                    downloadBtn.disabled = true;
+                }
+            }
+            
+            firstNameInput.addEventListener('input', checkInputs);
+            lastNameInput.addEventListener('input', checkInputs);
+        }
+
+        async function downloadPDF() {
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            
+            if (!firstName || !lastName) {
+                alert('Пожалуйста, введите имя и фамилию');
+                return;
+            }
+
+            // Создаем HTML для PDF
+            const currentDate = new Date().toLocaleDateString('ru-RU');
+            const pdfContainer = document.getElementById('pdfContainer');
+            
+            let resultsHTML = '';
+            for (const [category, percentage] of Object.entries(currentResults)) {
+                resultsHTML += `
+                    <div class="result-item">
+                        <div class="result-label">${category}</div>
+                        <div class="result-bar">
+                            <div class="result-fill" style="width: ${percentage}%">${percentage}%</div>
+                        </div>
+                        <div class="interpretation">${getInterpretation(percentage)}</div>
+                    </div>
+                `;
+            }
+
+            pdfContainer.innerHTML = `
+                <div class="pdf-header">
+                    <div class="pdf-title">Мельбурнский Опросник Принятия Решений (МОПР)</div>
+                    <div class="pdf-name">${firstName} ${lastName}</div>
+                    <div class="pdf-date">Дата прохождения: ${currentDate}</div>
+                </div>
+                <div class="pdf-results">
+                    <div class="pdf-results-title">Ваши результаты</div>
+                    ${resultsHTML}
+                </div>
+            `;
+
+            // Генерируем PDF с помощью html2canvas
+            try {
+                const canvas = await html2canvas(pdfContainer, {
+                    backgroundColor: 'white',
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true
+                });
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = 210;
+                const pageHeight = 295;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let heightLeft = imgHeight;
+
+                let position = 0;
+
+                doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+
+                while (heightLeft >= 0) {
+                    position = heightLeft - imgHeight;
+                    doc.addPage();
+                    doc.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+
+                // Сохранение файла
+                const fileName = `МОПР_${lastName}_${firstName}_${currentDate.replace(/\./g, '-')}.pdf`;
+                doc.save(fileName);
+
+                // Очищаем контейнер
+                pdfContainer.innerHTML = '';
+            } catch (error) {
+                console.error('Ошибка при создании PDF:', error);
+                alert('Произошла ошибка при создании PDF. Попробуйте еще раз.');
+            }
+        }
+    </script>
+</body>
+</html>
